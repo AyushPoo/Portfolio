@@ -3,6 +3,7 @@ import { Toaster } from "./components/ui/sonner";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import CustomCursor from "./components/CustomCursor";
+import TerminalChat from "./components/TerminalChat";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Work from "./pages/Work";
@@ -23,6 +24,7 @@ function App() {
           <Route path="/notes" element={<Notes />} />
         </Routes>
         <Footer />
+        <TerminalChat />
         <Toaster position="bottom-right" />
       </div>
     </Router>

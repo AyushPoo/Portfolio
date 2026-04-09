@@ -201,15 +201,37 @@
     transform: translateX(0);
   }
 
-  /* ── Skills marquee ── */
-  .marquee-track {
-    display: flex;
-    gap: 0.75rem;
-    white-space: nowrap;
-    animation: marquee 28s linear infinite;
+  /* ── Terminal Styles ── */
+  .terminal-container {
+    background: #000;
+    color: #00ff00;
+    font-family: 'Courier New', Courier, monospace;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
   }
-  .marquee-track:hover {
-    animation-play-state: paused;
+
+  .terminal-text {
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
+  }
+
+  .scanlines::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 2;
+    background-size: 100% 4px, 3px 100%;
+    pointer-events: none;
+  }
+
+  .crt-flicker {
+    animation: flicker 0.15s infinite;
   }
 }
 
@@ -252,6 +274,45 @@
 @keyframes marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
+}
+
+/* CRT Flicker */
+@keyframes flicker {
+  0% { opacity: 0.98; }
+  5% { opacity: 0.95; }
+  10% { opacity: 0.99; }
+  15% { opacity: 0.97; }
+  20% { opacity: 0.96; }
+  25% { opacity: 0.99; }
+  30% { opacity: 0.95; }
+  35% { opacity: 0.98; }
+  40% { opacity: 0.99; }
+  45% { opacity: 0.96; }
+  50% { opacity: 0.97; }
+  55% { opacity: 0.99; }
+  60% { opacity: 0.95; }
+  65% { opacity: 0.98; }
+  70% { opacity: 0.97; }
+  75% { opacity: 0.99; }
+  80% { opacity: 0.96; }
+  85% { opacity: 0.95; }
+  90% { opacity: 0.99; }
+  95% { opacity: 0.97; }
+  100% { opacity: 0.98; }
+}
+
+/* Typing cursor */
+@keyframes blink {
+  50% { opacity: 0; }
+}
+.terminal-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.2em;
+  background: #00ff00;
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
 }
 
 /* ── Custom Cursor ── */
