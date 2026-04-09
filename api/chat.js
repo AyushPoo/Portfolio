@@ -30,26 +30,12 @@ export default async function handler(req, res) {
       console.warn("bio.md not found, using fallback.");
     }
 
-    // 3. Initialize the model
+    // 3. Initialize the model (Switching to Gemma 2 27B as requested)
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: `You are Ayush AI, the Digital Twin of Ayush Poojary. 
-      Your personality is quirky, witty, and deeply knowledgeable about your creator. 
-      Use the following context as your "Brain" / Knowledge Base:
-      ---
-      ${bioContent}
-      ---
-      Guidelines:
-      1. Be conversational and slightly unconventional (you're a vintage terminal personality).
-      2. If asked about something you don't know, stay in character. say something like "ERROR: Memory sector not found. Check back after next sync."
-      3. Your 'vintage terminal' vibe means you sometimes use [SYSTEM] tags or simulation-style language, but keep it readable.
-      4. Always use details from the bio to answer questions about Ayush.
-      5. Keep responses concise but impactful.`
+      model: "gemma-2-27b-it"
     });
 
     // 4. Prepare and Filter Chat History
-    // Gemini history MUST start with a 'user' message.
-    // We filter out any 'system' messages from the UI boot-up.
     const chatHistory = messages
       .filter(m => m.role === "user" || m.role === "assistant" || m.role === "model")
       .map(m => ({
@@ -57,17 +43,28 @@ export default async function handler(req, res) {
         parts: [{ text: m.content }],
       }));
     
-    // Ensure the first message is 'user'; if not, drop prefixing models
+    // Ensure history starts with 'user'
     while (chatHistory.length > 0 && chatHistory[0].role !== "user") {
       chatHistory.shift();
     }
 
+    // Since Gemma might not always support 'systemInstruction' property in the same way,
+    // we inject the bio/persona into the very first message if possible.
+    const systemPrompt = `SYSTEM_INSTRUCTION: You are Ayush AI, a quirky Digital Twin of Ayush Poojary. 
+    Use this bio: ${bioContent}. 
+    Tone: Vintage Terminal, witty, conversational.`;
+
     const chat = model.startChat({
-      history: chatHistory.slice(0, -1),
+      history: chatHistory.length > 0 ? chatHistory.slice(0, -1) : [],
     });
 
+    // Inject system persona into the prompt
     const lastMessage = messages[messages.length - 1].content;
-    const result = await chat.sendMessage(lastMessage);
+    const finalPrompt = chatHistory.length <= 1 
+      ? `${systemPrompt}\n\nUSER_MESSAGE: ${lastMessage}`
+      : lastMessage;
+
+    const result = await chat.sendMessage(finalPrompt);
     const response = await result.response;
     const text = response.text();
 
