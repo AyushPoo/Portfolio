@@ -1,0 +1,300 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===================================================
+   AYUSH POOJARY — PORTFOLIO DESIGN SYSTEM
+   Dark editorial theme inspired by Nitro Framer template
+   Accent: Sage/Emerald Green
+   Font: Space Grotesk
+=================================================== */
+
+@layer base {
+  :root {
+    /* --- Base palette (dark editorial) --- */
+    --background: 0 0% 4%;           /* #0a0a0a — near black */
+    --foreground: 0 0% 93%;          /* #ededed — near white */
+
+    /* --- Surfaces --- */
+    --card: 0 0% 7%;                 /* #111111 — dark card */
+    --card-foreground: 0 0% 93%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 93%;
+
+    /* --- Brand: Sage/Emerald green --- */
+    --primary: 152 40% 48%;          /* #46a374 */
+    --primary-foreground: 0 0% 4%;
+    --primary-muted: 152 35% 30%;    /* darker variant */
+
+    /* --- Secondary & muted --- */
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 80%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 48%;
+
+    /* --- Accent (same as primary) --- */
+    --accent: 152 40% 48%;
+    --accent-foreground: 0 0% 4%;
+
+    /* --- Semantic --- */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* --- Border / input / ring --- */
+    --border: 0 0% 13%;
+    --input: 0 0% 13%;
+    --ring: 152 40% 48%;
+
+    /* --- Radius (minimal, editorial) --- */
+    --radius: 0.125rem;
+
+    /* --- Charts --- */
+    --chart-1: 152 40% 48%;
+    --chart-2: 228 40% 55%;
+    --chart-3: 38 70% 55%;
+    --chart-4: 200 50% 50%;
+    --chart-5: 280 40% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Emergent debug wrapper support */
+  [data-debug-wrapper="true"] {
+    display: contents !important;
+  }
+  [data-debug-wrapper="true"] > * {
+    margin-left: inherit;
+    margin-right: inherit;
+    margin-top: inherit;
+    margin-bottom: inherit;
+    padding-left: inherit;
+    padding-right: inherit;
+    padding-top: inherit;
+    padding-bottom: inherit;
+    column-gap: inherit;
+    row-gap: inherit;
+    gap: inherit;
+    border-left-width: inherit;
+    border-right-width: inherit;
+    border-top-width: inherit;
+    border-bottom-width: inherit;
+    border-left-style: inherit;
+    border-right-style: inherit;
+    border-top-style: inherit;
+    border-bottom-style: inherit;
+    border-left-color: inherit;
+    border-right-color: inherit;
+    border-top-color: inherit;
+    border-bottom-color: inherit;
+  }
+}
+
+/* ===================================================
+   CUSTOM UTILITIES
+=================================================== */
+@layer utilities {
+  /* Nitro-style column grid lines */
+  .grid-cols-bg {
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.028) 0,
+      rgba(255, 255, 255, 0.028) 1px,
+      transparent 1px,
+      transparent 12.5%
+    );
+  }
+
+  /* Hero text — responsive, massive editorial heading */
+  .hero-text {
+    font-size: clamp(3rem, 7.5vw, 8.5rem);
+    font-weight: 600;
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+  }
+
+  /* Section label with dot prefix */
+  .section-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: lowercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .section-label::before {
+    content: '.';
+    color: hsl(var(--primary));
+    margin-right: 1px;
+  }
+
+  /* Nav underline hover effect */
+  .nav-link {
+    position: relative;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: currentColor;
+    transition: width 0.25s ease;
+  }
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  /* ── Project card hover — real float effect ── */
+  .project-card-wrap {
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .project-card-inner {
+    transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .project-card-wrap:hover .project-card-inner {
+    transform: scale(1.015) translateY(-6px);
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.55);
+  }
+
+  /* ── Scroll-reveal base state — hidden ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* revealed state */
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Staggered children variants */
+  .reveal-d1 { transition-delay: 0.1s; }
+  .reveal-d2 { transition-delay: 0.2s; }
+  .reveal-d3 { transition-delay: 0.3s; }
+  .reveal-d4 { transition-delay: 0.4s; }
+
+  /* Reveal from left (for stats row) */
+  .reveal-left {
+    opacity: 0;
+    transform: translateX(-24px);
+    transition:
+      opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .reveal-left.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* ── Skills marquee ── */
+  .marquee-track {
+    display: flex;
+    gap: 0.75rem;
+    white-space: nowrap;
+    animation: marquee 28s linear infinite;
+  }
+  .marquee-track:hover {
+    animation-play-state: paused;
+  }
+}
+
+/* ===================================================
+   ANIMATIONS
+=================================================== */
+
+/* Pulsing status dot */
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: hsl(var(--primary));
+  animation: status-pulse 2.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* Fade up on page load (hero only — above the fold) */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up          { animation: fadeUp 0.65s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.fade-up-d1       { animation: fadeUp 0.65s cubic-bezier(0.4, 0, 0.2, 1) 0.12s both; }
+.fade-up-d2       { animation: fadeUp 0.65s cubic-bezier(0.4, 0, 0.2, 1) 0.24s both; }
+.fade-up-d3       { animation: fadeUp 0.65s cubic-bezier(0.4, 0, 0.2, 1) 0.36s both; }
+
+/* Horizontal line expand */
+@keyframes lineExpand {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+/* Marquee scroll */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── Custom Cursor ── */
+@media (hover: hover) and (pointer: fine) {
+  body {
+    cursor: none !important;
+  }
+}
+
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  background-color: hsl(var(--primary));
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transition: transform 0.05s ease-out;
+}
+
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid hsl(var(--primary));
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform 0.1s ease-out, width 0.3s ease, height 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.cursor-ring.hovering {
+  width: 56px;
+  height: 56px;
+  background-color: hsla(var(--primary), 0.1);
+  border-color: hsla(var(--primary), 0.3);
+}
+
+/* Ensure interactive elements use custom cursor logic */
+a, button, .project-card-wrap, input, textarea {
+  cursor: none !important;
+}
