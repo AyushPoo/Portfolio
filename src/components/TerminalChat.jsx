@@ -116,12 +116,14 @@ const TerminalChat = () => {
               ref={scrollRef}
               className="flex-1 overflow-y-auto p-4 space-y-2 text-sm crt-flicker relative z-0"
             >
+              {history.map((msg, i) => (
                 <div key={i} className={`terminal-text whitespace-pre-wrap ${msg.role === 'user' ? 'text-white' : msg.role === 'error' ? 'text-red-500' : 'text-[#00ff00]'}`}>
                   {msg.role === 'user' && <span className="mr-2">C:\USERS\GUEST&gt;</span>}
                   {msg.role === 'system' && <span className="mr-2">[SYSTEM]</span>}
                   {msg.role === 'assistant' && <span className="mr-2">[AYUSH_AI]</span>}
                   {msg.content}
                 </div>
+              ))}
               {isTyping && (
                 <div className="text-[#00ff00] animate-pulse">
                   [AYUSH_AI] Thinking<span className="terminal-cursor" />
