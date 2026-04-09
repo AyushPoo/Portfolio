@@ -18,28 +18,15 @@ export default async function handler(req, res) {
     const { messages } = req.body;
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // 2. Resolve Bio Path (Vercel specific)
-    // We try multiple locations because process.cwd() shifts between local and Vercel environments
-    const possiblePaths = [
-      path.join(process.cwd(), "src/data/knowledge/bio.md"),
-      path.join(process.cwd(), "api", "..", "src/data/knowledge/bio.md"),
-      path.join(__dirname, "..", "src/data/knowledge/bio.md")
-    ];
-
+    // 2. Resolve Bio Path (Bundled in the api/ directory)
+    const bioPath = path.join(process.cwd(), "api", "bio.md");
     let bioContent = "Ayush is a versatile professional building cool stuff.";
-    let foundPath = false;
 
-    for (const p of possiblePaths) {
-      if (fs.existsSync(p)) {
-        bioContent = fs.readFileSync(p, "utf8");
-        console.log("Successfully loaded bio from:", p);
-        foundPath = true;
-        break;
-      }
-    }
-
-    if (!foundPath) {
-      console.warn("WARNING: bio.md not found in any expected location. Using default profile.");
+    if (fs.existsSync(bioPath)) {
+      bioContent = fs.readFileSync(bioPath, "utf8");
+      console.log("Successfully loaded bio from bundled API directory.");
+    } else {
+      console.warn("WARNING: bio.md not found in bundled API directory. Using default profile.");
     }
 
     // 3. Initialize the model
