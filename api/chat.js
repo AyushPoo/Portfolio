@@ -27,8 +27,8 @@ export default async function handler(req, res) {
       bioContent = fs.readFileSync(bioPath, "utf8");
     }
 
-    // Prepare model (Using the first one from your screenshot)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Prepare model (Using the EXACT model name from your screenshot)
+    const model = genAI.getGenerativeModel({ model: "gemma-4-31b" });
 
     // Personality Injection
     const personaPrefix = `[SYSTEM NOTE: You are Ayush AI, a quirky Digital Twin of Ayush Poojary. Context: ${bioContent}. Respond in a witty, vintage terminal style.]\n\n`;
