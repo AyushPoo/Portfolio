@@ -27,7 +27,10 @@ export default async function handler(req, res) {
       bioContent = fs.readFileSync(bioPath, "utf8");
     }
 
-    const personaPrefix = `[SYSTEM NOTE: You are Ayush AI. Context: ${bioContent}. Respond in a witty terminal style.]\n\n`;
+    const personaPrefix = `System: You are Ayush Poojary's Digital Twin.
+Traits: Witty, finance-savvy, tech-forward, slightly quirky.
+Context: ${bioContent}
+Instructions: Respond as Ayush in a conversational way. Support the terminal aesthetic with your tone, but do NOT output bash commands or shell code blocks unless specifically asked. Stay human and approachable.`;
 
     // Filter and format history
     const chatHistory = messages
@@ -43,26 +46,33 @@ export default async function handler(req, res) {
 
     const lastMessage = messages[messages.length - 1].content;
     const isFirstMessage = chatHistory.length <= 1;
-    const prompt = isFirstMessage ? personaPrefix + lastMessage : lastMessage;
+    const prompt = isFirstMessage ? personaPrefix + "\n\nUser: " + lastMessage : lastMessage;
 
-    // BRUTE FORCE FALLBACK
-    const modelsToTry = ["gemma-4-31b", "gemini-2.5-flash", "gemini-1.5-flash", "gemma-2-9b-it"];
+    // VERIFIED MODEL LIST FROM AI STUDIO SNIFFING
+    const modelsToTry = ["gemma-4-31b-it", "gemini-2.5-pro", "gemini-2.5-flash", "gemini-1.5-flash"];
     let lastError = null;
 
     for (const modelName of modelsToTry) {
       try {
-        console.log(`Trying specialized model: ${modelName}`);
+        console.log(`Attempting verified model: ${modelName}`);
         const model = genAI.getGenerativeModel({ model: modelName });
-        const chat = model.startChat({
-          history: chatHistory.length > 0 ? chatHistory.slice(0, -1) : [],
-        });
-        const result = await chat.sendMessage(prompt);
-        const response = await result.response;
-        const text = response.text();
-        return res.status(200).json({ text, used: modelName });
+        
+        // Use generateContent for the first message (simpler), chat for subsequent
+        if (isFirstMessage) {
+          const result = await model.generateContent(prompt);
+          const response = await result.response;
+          return res.status(200).json({ text: response.text(), used: modelName });
+        } else {
+          const chat = model.startChat({
+            history: chatHistory.slice(0, -1),
+          });
+          const result = await chat.sendMessage(prompt);
+          const response = await result.response;
+          return res.status(200).json({ text: response.text(), used: modelName });
+        }
       } catch (err) {
         lastError = err;
-        console.warn(`Failed with ${modelName}:`, err.message);
+        console.warn(`Model ${modelName} unavailable:`, err.message);
         continue;
       }
     }
