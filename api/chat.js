@@ -20,6 +20,11 @@ export default async function handler(req, res) {
     const { messages } = req.body;
     const genAI = new GoogleGenerativeAI(apiKey);
     
+    // 1. DEBUG: List authorized models to find the right name
+    const modelList = await genAI.listModels();
+    const authorizedModels = modelList.models.map(m => m.name);
+    console.log("Authorized Models:", authorizedModels);
+
     // Resolve Bio
     const bioPath = path.join(process.cwd(), "api", "bio.md");
     let bioContent = "Ayush is a versatile professional.";
@@ -27,13 +32,12 @@ export default async function handler(req, res) {
       bioContent = fs.readFileSync(bioPath, "utf8");
     }
 
-    // Prepare model (Using the EXACT model name from your screenshot)
-    const model = genAI.getGenerativeModel({ model: "gemma-4-31b" });
+    // Try a model from the authorized list if possible, or fallback
+    const modelName = authorizedModels.find(m => m.includes("flash")) || authorizedModels[0] || "gemini-1.5-flash";
+    const model = genAI.getGenerativeModel({ model: modelName });
 
-    // Personality Injection
-    const personaPrefix = `[SYSTEM NOTE: You are Ayush AI, a quirky Digital Twin of Ayush Poojary. Context: ${bioContent}. Respond in a witty, vintage terminal style.]\n\n`;
+    const personaPrefix = `[SYSTEM NOTE: You are Ayush AI. Context: ${bioContent}. Respond in a witty terminal style.]\n\n`;
 
-    // Filter and format history
     const chatHistory = messages
       .filter(m => m.role === "user" || m.role === "assistant" || m.role === "model")
       .map(m => ({
@@ -41,7 +45,6 @@ export default async function handler(req, res) {
         parts: [{ text: m.content }],
       }));
 
-    // Ensure it starts with user
     while (chatHistory.length > 0 && chatHistory[0].role !== "user") {
       chatHistory.shift();
     }
@@ -53,18 +56,26 @@ export default async function handler(req, res) {
       history: chatHistory.length > 0 ? chatHistory.slice(0, -1) : [],
     });
 
-    // If it's the first message, prepend the persona
     const prompt = isFirstMessage ? personaPrefix + lastMessage : lastMessage;
 
     const result = await chat.sendMessage(prompt);
     const response = await result.response;
     const text = response.text();
 
-    return res.status(200).json({ text });
+    return res.status(200).json({ text, usedModel: modelName });
   } catch (error) {
+    // Return the authorized models back to the UI so we can see them!
+    let authModels = [];
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const list = await genAI.listModels();
+      authModels = list.models.map(m => m.name);
+    } catch (e) {}
+
     return res.status(500).json({ 
       error: error.message,
-      hint: "Check your API key in Vercel settings."
+      authorizedModels: authModels,
+      hint: "Check the 'authorizedModels' list above to find a valid model name for your key."
     });
   }
 }
