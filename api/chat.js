@@ -51,13 +51,13 @@ export default async function handler(req, res) {
     const lastMessage = messages[messages.length - 1].content;
     const prompt = lastMessage;
 
-    // VERIFIED MODEL LIST
-    const modelsToTry = ["gemma-4-31b-it", "gemini-2.5-pro", "gemini-2.5-flash"];
+    // RE-ORDERED: Gemini 1.5 Flash is much cleaner and less likely to 'leak' thoughts.
+    const modelsToTry = ["gemini-1.5-flash", "gemma-4-31b-it", "gemini-2.5-pro", "gemini-2.5-flash"];
     let lastError = null;
 
     for (const modelName of modelsToTry) {
       try {
-        console.log(`Final attempt with model: ${modelName}`);
+        console.log(`Final polish attempt: ${modelName}`);
         const model = genAI.getGenerativeModel({ 
           model: modelName,
           systemInstruction: { text: systemInstruction }
@@ -68,10 +68,17 @@ export default async function handler(req, res) {
         });
         const result = await chat.sendMessage(prompt);
         const response = await result.response;
-        return res.status(200).json({ text: response.text(), used: modelName });
+        let text = response.text();
+
+        // REASONING STRIPPER: Remove common 'leaked' headers from over-smart models
+        text = text.replace(/^(Draft|Option|Reasoning|Thought|Strategy|Plan)\s*\d*[:\-\s\n][\s\S]*?(?=\n\n|$)/gi, '');
+        text = text.replace(/\[(Reasoning|Thought Process|Strategy)\][\s\S]*?\[\/.*?\]/gi, '');
+        text = text.trim();
+
+        return res.status(200).json({ text, used: modelName });
       } catch (err) {
         lastError = err;
-        console.warn(`Model ${modelName} failed:`, err.message);
+        console.warn(`Model ${modelName} fail:`, err.message);
         continue;
       }
     }
