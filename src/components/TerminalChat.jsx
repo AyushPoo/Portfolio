@@ -59,7 +59,8 @@ const TerminalChat = () => {
       });
       setHistory(prev => [...prev, { role: 'assistant', content: response.data.text }]);
     } catch (error) {
-      setHistory(prev => [...prev, { role: 'error', content: 'CONNECTION ERROR: Could not reach Ayush_OS server.' }]);
+      const errorMsg = error.response?.data?.error || error.message;
+      setHistory(prev => [...prev, { role: 'error', content: `CRITICAL_FAILURE: ${errorMsg}` }]);
     } finally {
       setIsTyping(false);
     }
