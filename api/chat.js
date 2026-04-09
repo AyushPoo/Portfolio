@@ -27,16 +27,17 @@ export default async function handler(req, res) {
       bioContent = fs.readFileSync(bioPath, "utf8");
     }
 
-    const systemInstruction = `You are the Digital Twin of Ayush Poojary. 
-    KNOWLEDGE BASE: ${bioContent}
-    PERSONALITY: Witty, ambitious, finance-focused, hacker-aesthetic but human.
-    CRITICAL INSTRUCTION: You MUST wrap your final, conversational response inside <response> and </response> tags. 
-    Example: <response>Hey there! I'm Ayush's digital twin.</response>
+    const systemInstruction = `You are the Digital Twin of Ayush Poojary.
+    KB: ${bioContent}
+    IDENTITY: Witty, finance-savvy AI founder.
+    ONE-SHOT EXAMPLE:
+    Input: "Who are you?"
+    Correct Output: <twin_response>I'm Ayush's digital echo—wittier, faster, and available 24/7.</twin_response>
     
     STRICT RULES:
-    1. NEVER output internal reasoning or drafts outside or inside the tags.
-    2. Your response inside the tags should be clean and purely conversational.
-    3. Do not include markdown code blocks for bash unless asked.`;
+    1. ONLY output your response inside <twin_response> tags.
+    2. ABSOLUTELY NO reasoning, drafting, or internal checks allowed.
+    3. If you talk to yourself, you fail.`;
 
     const chatHistory = messages
       .filter(m => m.role === "user" || m.role === "assistant" || m.role === "model")
@@ -52,13 +53,13 @@ export default async function handler(req, res) {
     const lastMessage = messages[messages.length - 1].content;
     const prompt = lastMessage;
 
-    // Use the model we know exists and responds
-    const modelsToTry = ["gemma-4-31b-it", "gemini-2.5-pro", "gemini-2.5-flash"];
+    // Hardcoded verified model for full-proof connectivity
+    const modelsToTry = ["gemma-4-31b-it", "gemini-2.5-pro"]; 
     let lastError = null;
 
     for (const modelName of modelsToTry) {
       try {
-        console.log(`Tag-extraction attempt: ${modelName}`);
+        console.log(`Executing Logic Guillotine: ${modelName}`);
         const model = genAI.getGenerativeModel({ 
           model: modelName,
           systemInstruction: { text: systemInstruction }
@@ -69,21 +70,24 @@ export default async function handler(req, res) {
         });
         const result = await chat.sendMessage(prompt);
         const response = await result.response;
-        const fullText = response.text();
+        const rawText = response.text();
 
-        // SURGICAL EXTRACTION: Only take what's inside <response> tags
-        const match = fullText.match(/<response>([\s\S]*?)<\/response>/i);
-        let finalOutput = match ? match[1].trim() : fullText.trim();
-        
-        // Final cleanup of any lingering reasoning if tags failed
-        if (!match) {
-          finalOutput = finalOutput.replace(/^(Draft|Option|Reasoning|Thought|Strategy|Plan)[\s\S]*?\n\n/gi, '').trim();
+        // THE GUILLOTINE: Surgical Extraction
+        let cleanText = rawText;
+        if (rawText.includes("<twin_response>")) {
+          cleanText = rawText.split("</twin_response>")[0].split("<twin_response>").pop();
+        } else {
+          // Fallback Scrubber: Remove any line that looks like a heading or reasoning
+          cleanText = rawText
+            .split('\n')
+            .filter(line => !line.trim().match(/^(Draft|Reasoning|Thought|Personality|Scenario|Check|Option|Strategy|Prompt|Context|Instruction|Example)/i))
+            .join('\n');
         }
 
-        return res.status(200).json({ text: finalOutput, used: modelName });
+        return res.status(200).json({ text: cleanText.trim(), used: modelName });
       } catch (err) {
         lastError = err;
-        console.warn(`Model ${modelName} fail:`, err.message);
+        console.warn(`Guillotine bypassed or model ${modelName} fail:`, err.message);
         continue;
       }
     }

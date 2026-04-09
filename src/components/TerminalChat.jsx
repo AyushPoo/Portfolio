@@ -51,16 +51,24 @@ const TerminalChat = () => {
     // AI Chat for everything else
     setIsTyping(true);
     try {
+      // Only send the last 10 messages to keep the context clean and fast
+      const recentHistory = history.slice(-10).map(h => ({
+        role: h.role === 'assistant' ? 'model' : h.role === 'system' ? 'model' : h.role,
+        content: h.content
+      }));
+
       const response = await axios.post('/api/chat', {
-        messages: history.concat({ role: 'user', content: cmd }).map(h => ({
-          role: h.role,
-          content: h.content
-        }))
+        messages: recentHistory.concat({ role: 'user', content: cmd })
       });
-      setHistory(prev => [...prev, { role: 'assistant', content: response.data.text }]);
+      
+      const text = response.data.text;
+      setHistory(prev => [...prev, { role: 'assistant', content: text }]);
     } catch (error) {
-      const errorMsg = error.response?.data?.error || error.message;
-      setHistory(prev => [...prev, { role: 'error', content: `CRITICAL_FAILURE: ${errorMsg}` }]);
+      console.error('Terminal Error:', error);
+      setHistory(prev => [...prev, { 
+        role: 'error', 
+        content: 'SYSTEM OVERLOAD: RECALIBRATING BRAIN... Please try another query.' 
+      }]);
     } finally {
       setIsTyping(false);
     }
@@ -108,14 +116,12 @@ const TerminalChat = () => {
               ref={scrollRef}
               className="flex-1 overflow-y-auto p-4 space-y-2 text-sm crt-flicker relative z-0"
             >
-              {history.map((msg, i) => (
-                <div key={i} className={`terminal-text ${msg.role === 'user' ? 'text-white' : msg.role === 'error' ? 'text-red-500' : 'text-[#00ff00]'}`}>
+                <div key={i} className={`terminal-text whitespace-pre-wrap ${msg.role === 'user' ? 'text-white' : msg.role === 'error' ? 'text-red-500' : 'text-[#00ff00]'}`}>
                   {msg.role === 'user' && <span className="mr-2">C:\USERS\GUEST&gt;</span>}
                   {msg.role === 'system' && <span className="mr-2">[SYSTEM]</span>}
                   {msg.role === 'assistant' && <span className="mr-2">[AYUSH_AI]</span>}
                   {msg.content}
                 </div>
-              ))}
               {isTyping && (
                 <div className="text-[#00ff00] animate-pulse">
                   [AYUSH_AI] Thinking<span className="terminal-cursor" />
