@@ -23,19 +23,11 @@ export default async function handler(req, res) {
     // 2. Resolve Bio Path
     const bioPath = path.join(process.cwd(), "api", "bio.md");
     let bioContent = "Ayush is a versatile professional building cool stuff.";
-
     if (fs.existsSync(bioPath)) {
       bioContent = fs.readFileSync(bioPath, "utf8");
-    } else {
-      console.warn("bio.md not found, using fallback.");
     }
 
-    // 3. Initialize the model (Switching to Gemma 2 27B as requested)
-    const model = genAI.getGenerativeModel({ 
-      model: "gemma-2-27b-it"
-    });
-
-    // 4. Prepare and Filter Chat History
+    // 3. Prepare Chat History
     const chatHistory = messages
       .filter(m => m.role === "user" || m.role === "assistant" || m.role === "model")
       .map(m => ({
@@ -43,37 +35,50 @@ export default async function handler(req, res) {
         parts: [{ text: m.content }],
       }));
     
-    // Ensure history starts with 'user'
     while (chatHistory.length > 0 && chatHistory[0].role !== "user") {
       chatHistory.shift();
     }
 
-    // Since Gemma might not always support 'systemInstruction' property in the same way,
-    // we inject the bio/persona into the very first message if possible.
-    const systemPrompt = `SYSTEM_INSTRUCTION: You are Ayush AI, a quirky Digital Twin of Ayush Poojary. 
-    Use this bio: ${bioContent}. 
-    Tone: Vintage Terminal, witty, conversational.`;
+    const systemPrompt = `You are Ayush AI, a quirky Digital Twin of Ayush Poojary. 
+    Bio: ${bioContent}. Tone: Vintage Terminal, witty.`;
 
-    const chat = model.startChat({
-      history: chatHistory.length > 0 ? chatHistory.slice(0, -1) : [],
-    });
+    // 4. Smart Fallback Logic
+    const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.5-flash-latest", "gemini-pro"];
+    let lastError = null;
 
-    // Inject system persona into the prompt
-    const lastMessage = messages[messages.length - 1].content;
-    const finalPrompt = chatHistory.length <= 1 
-      ? `${systemPrompt}\n\nUSER_MESSAGE: ${lastMessage}`
-      : lastMessage;
+    for (const modelName of modelsToTry) {
+      try {
+        console.log(`Attempting chat with model: ${modelName}`);
+        const model = genAI.getGenerativeModel({ 
+          model: modelName,
+          systemInstruction: systemPrompt
+        });
 
-    const result = await chat.sendMessage(finalPrompt);
-    const response = await result.response;
-    const text = response.text();
+        const chat = model.startChat({
+          history: chatHistory.length > 0 ? chatHistory.slice(0, -1) : [],
+        });
 
-    return res.status(200).json({ text });
+        const lastMessage = messages[messages.length - 1].content;
+        const result = await chat.sendMessage(lastMessage);
+        const response = await result.response;
+        const text = response.text();
+
+        return res.status(200).json({ text, modelUsed: modelName });
+      } catch (err) {
+        lastError = err;
+        if (err.message.includes("404") || err.message.includes("not found")) {
+          console.warn(`Model ${modelName} not found, trying next...`);
+          continue;
+        }
+        throw err; // If it's not a 404, throw it (e.g., Auth error)
+      }
+    }
+
+    throw lastError; // If none of the models worked
   } catch (error) {
     return res.status(500).json({ 
       error: error.message,
-      stack: error.stack,
-      hint: "Check if the API key is valid and the model 'gemini-1.5-flash' is accessible."
+      hint: "Try checking your API key or permissions in Google AI Studio."
     });
   }
 }
