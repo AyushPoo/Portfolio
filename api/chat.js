@@ -20,65 +20,51 @@ export default async function handler(req, res) {
     const { messages } = req.body;
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // 2. Resolve Bio Path
+    // Resolve Bio
     const bioPath = path.join(process.cwd(), "api", "bio.md");
-    let bioContent = "Ayush is a versatile professional building cool stuff.";
+    let bioContent = "Ayush is a versatile professional.";
     if (fs.existsSync(bioPath)) {
       bioContent = fs.readFileSync(bioPath, "utf8");
     }
 
-    // 3. Prepare Chat History
+    // Prepare model (Using the first one from your screenshot)
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // Personality Injection
+    const personaPrefix = `[SYSTEM NOTE: You are Ayush AI, a quirky Digital Twin of Ayush Poojary. Context: ${bioContent}. Respond in a witty, vintage terminal style.]\n\n`;
+
+    // Filter and format history
     const chatHistory = messages
       .filter(m => m.role === "user" || m.role === "assistant" || m.role === "model")
       .map(m => ({
         role: m.role === "user" ? "user" : "model",
         parts: [{ text: m.content }],
       }));
-    
+
+    // Ensure it starts with user
     while (chatHistory.length > 0 && chatHistory[0].role !== "user") {
       chatHistory.shift();
     }
 
-    const systemPrompt = `You are Ayush AI, a quirky Digital Twin of Ayush Poojary. 
-    Bio: ${bioContent}. Tone: Vintage Terminal, witty.`;
+    const lastMessage = messages[messages.length - 1].content;
+    const isFirstMessage = chatHistory.length <= 1;
+    
+    const chat = model.startChat({
+      history: chatHistory.length > 0 ? chatHistory.slice(0, -1) : [],
+    });
 
-    // 4. Smart Fallback Logic
-    const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.5-flash-latest", "gemini-pro"];
-    let lastError = null;
+    // If it's the first message, prepend the persona
+    const prompt = isFirstMessage ? personaPrefix + lastMessage : lastMessage;
 
-    for (const modelName of modelsToTry) {
-      try {
-        console.log(`Attempting chat with model: ${modelName}`);
-        const model = genAI.getGenerativeModel({ 
-          model: modelName,
-          systemInstruction: systemPrompt
-        });
+    const result = await chat.sendMessage(prompt);
+    const response = await result.response;
+    const text = response.text();
 
-        const chat = model.startChat({
-          history: chatHistory.length > 0 ? chatHistory.slice(0, -1) : [],
-        });
-
-        const lastMessage = messages[messages.length - 1].content;
-        const result = await chat.sendMessage(lastMessage);
-        const response = await result.response;
-        const text = response.text();
-
-        return res.status(200).json({ text, modelUsed: modelName });
-      } catch (err) {
-        lastError = err;
-        if (err.message.includes("404") || err.message.includes("not found")) {
-          console.warn(`Model ${modelName} not found, trying next...`);
-          continue;
-        }
-        throw err; // If it's not a 404, throw it (e.g., Auth error)
-      }
-    }
-
-    throw lastError; // If none of the models worked
+    return res.status(200).json({ text });
   } catch (error) {
     return res.status(500).json({ 
       error: error.message,
-      hint: "Try checking your API key or permissions in Google AI Studio."
+      hint: "Check your API key in Vercel settings."
     });
   }
 }
