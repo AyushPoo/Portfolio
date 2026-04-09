@@ -27,12 +27,15 @@ export default async function handler(req, res) {
       bioContent = fs.readFileSync(bioPath, "utf8");
     }
 
-    const personaPrefix = `System: You are Ayush Poojary's Digital Twin.
-Traits: Witty, finance-savvy, tech-forward, slightly quirky.
-Context: ${bioContent}
-Instructions: Respond as Ayush in a conversational way. Support the terminal aesthetic with your tone, but do NOT output bash commands or shell code blocks unless specifically asked. Stay human and approachable.`;
+    const systemInstruction = `You are the Digital Twin of Ayush Poojary. 
+    KNOWLEDGE BASE: ${bioContent}
+    PERSONALITY: Witty, ambitious, finance-focused, hacker-aesthetic but human.
+    STRICT RULES:
+    1. NEVER output bash code blocks (e.g., \` \` \`bash).
+    2. NEVER explain your internal reasoning or "thought process".
+    3. Direct, conversational responses only. 
+    4. Support the terminal aesthetic through your style/tone, not through code formatting.`;
 
-    // Filter and format history
     const chatHistory = messages
       .filter(m => m.role === "user" || m.role === "assistant" || m.role === "model")
       .map(m => ({
@@ -45,34 +48,29 @@ Instructions: Respond as Ayush in a conversational way. Support the terminal aes
     }
 
     const lastMessage = messages[messages.length - 1].content;
-    const isFirstMessage = chatHistory.length <= 1;
-    const prompt = isFirstMessage ? personaPrefix + "\n\nUser: " + lastMessage : lastMessage;
+    const prompt = lastMessage;
 
-    // VERIFIED MODEL LIST FROM AI STUDIO SNIFFING
-    const modelsToTry = ["gemma-4-31b-it", "gemini-2.5-pro", "gemini-2.5-flash", "gemini-1.5-flash"];
+    // VERIFIED MODEL LIST
+    const modelsToTry = ["gemma-4-31b-it", "gemini-2.5-pro", "gemini-2.5-flash"];
     let lastError = null;
 
     for (const modelName of modelsToTry) {
       try {
-        console.log(`Attempting verified model: ${modelName}`);
-        const model = genAI.getGenerativeModel({ model: modelName });
+        console.log(`Final attempt with model: ${modelName}`);
+        const model = genAI.getGenerativeModel({ 
+          model: modelName,
+          systemInstruction: { text: systemInstruction }
+        });
         
-        // Use generateContent for the first message (simpler), chat for subsequent
-        if (isFirstMessage) {
-          const result = await model.generateContent(prompt);
-          const response = await result.response;
-          return res.status(200).json({ text: response.text(), used: modelName });
-        } else {
-          const chat = model.startChat({
-            history: chatHistory.slice(0, -1),
-          });
-          const result = await chat.sendMessage(prompt);
-          const response = await result.response;
-          return res.status(200).json({ text: response.text(), used: modelName });
-        }
+        const chat = model.startChat({
+          history: chatHistory.length > 1 ? chatHistory.slice(0, -1) : [],
+        });
+        const result = await chat.sendMessage(prompt);
+        const response = await result.response;
+        return res.status(200).json({ text: response.text(), used: modelName });
       } catch (err) {
         lastError = err;
-        console.warn(`Model ${modelName} unavailable:`, err.message);
+        console.warn(`Model ${modelName} failed:`, err.message);
         continue;
       }
     }
