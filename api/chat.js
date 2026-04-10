@@ -20,11 +20,31 @@ export default async function handler(req, res) {
     const { messages } = req.body;
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Resolve Bio
+    // Resolve Knowledge Base
     const bioPath = path.join(process.cwd(), "api", "bio.md");
-    let bioContent = "Ayush is a versatile professional.";
+    const knowledgeDirPath = path.join(process.cwd(), "api", "knowledge");
+    
+    let bioContent = "";
+    
+    // Read primary bio
     if (fs.existsSync(bioPath)) {
-      bioContent = fs.readFileSync(bioPath, "utf8");
+      bioContent += fs.readFileSync(bioPath, "utf8") + "\n\n";
+    }
+
+    // Read additional knowledge files
+    if (fs.existsSync(knowledgeDirPath)) {
+      const files = fs.readdirSync(knowledgeDirPath);
+      for (const file of files) {
+        if (file.endsWith(".md")) {
+          const filePath = path.join(knowledgeDirPath, file);
+          const content = fs.readFileSync(filePath, "utf8");
+          bioContent += `--- FILE: ${file} ---\n${content}\n\n`;
+        }
+      }
+    }
+
+    if (!bioContent.trim()) {
+      bioContent = "Ayush is a versatile professional.";
     }
 
     const systemInstruction = `You are the Digital Twin of Ayush Poojary.
