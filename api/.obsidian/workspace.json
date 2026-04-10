@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "bio.md",
+                "file": "knowledge/bio.md",
                 "mode": "source",
                 "source": false
               },
@@ -184,5 +184,12 @@
     }
   },
   "active": "f20f66a7baa81dce",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "knowledge/secret_fact.md",
+    "knowledge/bio.md",
+    "knowledge/New Text Document.txt",
+    "bio.md",
+    "knowledge/test_verify.md",
+    "knowledge"
+  ]
 }
