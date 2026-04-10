@@ -9,10 +9,18 @@ const TerminalChat = () => {
   const [history, setHistory] = useState([
     { role: 'system', content: 'AYUSH_OS [Version 4.0.2]' },
     { role: 'system', content: '(c) Ayush Poojary. All rights reserved.' },
-    { role: 'system', content: 'Type "help" for a list of commands.' },
+    { role: 'system', content: 'I am Ayush\'s AI Twin! Type "help" for local commands or just ask me anything about his work, skills, or experience.' },
   ]);
   const [isTyping, setIsTyping] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const scrollRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTooltip(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -33,7 +41,7 @@ const TerminalChat = () => {
     if (cleanCmd === 'clear') {
       setHistory([
         { role: 'system', content: 'Terminal cleared.' },
-        { role: 'system', content: 'Type "help" for a list of commands.' }
+        { role: 'system', content: 'I am Ayush\'s AI Twin! Type "help" or ask me anything.' }
       ]);
       return;
     }
@@ -77,14 +85,33 @@ const TerminalChat = () => {
   return (
     <div className="fixed bottom-6 right-6 z-[9999]">
       {/* Toggle Button */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="bg-black border-2 border-[#00ff00] p-4 rounded-full shadow-[0_0_15px_rgba(0,255,0,0.3)] text-[#00ff00]"
-      >
-        <Terminal size={24} />
-      </motion.button>
+      <div className="relative">
+        <AnimatePresence>
+          {showTooltip && !isOpen && (
+            <motion.div
+              initial={{ opacity: 0, x: 20, scale: 0.8 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 20, scale: 0.8 }}
+              className="absolute right-full mr-4 top-1/2 -translate-y-1/2 whitespace-nowrap bg-black border border-[#00ff00] text-[#00ff00] px-4 py-2 rounded-lg text-sm font-mono shadow-[0_0_10px_rgba(0,255,0,0.2)]"
+            >
+              Ask me anything!
+              <div className="absolute right-[-6px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-l-[6px] border-l-[#00ff00]"></div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            setIsOpen(!isOpen);
+            setShowTooltip(false);
+          }}
+          className="bg-black border-2 border-[#00ff00] p-4 rounded-full shadow-[0_0_15px_rgba(0,255,0,0.3)] text-[#00ff00]"
+        >
+          <Terminal size={24} />
+        </motion.button>
+      </div>
 
       {/* Terminal Window */}
       <AnimatePresence>
@@ -93,7 +120,7 @@ const TerminalChat = () => {
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="absolute bottom-20 right-0 w-[90vw] md:w-[450px] h-[500px] terminal-container rounded-lg border-2 border-[#00ff00] flex flex-col overflow-hidden"
+            className="absolute bottom-20 right-0 w-[85vw] md:w-[450px] h-[400px] md:h-[500px] terminal-container rounded-lg border-2 border-[#00ff00] flex flex-col overflow-hidden backdrop-blur-md bg-black/60 shadow-[0_0_30px_rgba(0,0,0,0.5)]"
           >
             {/* Header */}
             <div className="bg-[#00ff00] text-black px-4 py-2 flex justify-between items-center font-bold text-xs uppercase tracking-wider">
@@ -146,8 +173,8 @@ const TerminalChat = () => {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none text-[#00ff00] font-mono placeholder-[#00ff00]/30"
-                  placeholder="Enter command..."
+                  className="flex-1 bg-transparent border-none outline-none text-[#00ff00] font-mono placeholder-[#00ff00]/30 min-w-0"
+                  placeholder="Ask me anything about Ayush..."
                 />
                 <button type="submit" className="text-[#00ff00] hover:scale-110 transition-transform">
                   <Send size={18} />
