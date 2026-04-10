@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "knowledge/secret_fact.md",
+                "file": "knowledge/Founder Systems.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "secret_fact"
+              "title": "Founder Systems"
             }
           }
         ]
@@ -187,6 +187,15 @@
   "active": "f20f66a7baa81dce",
   "lastOpenFiles": [
     "knowledge/bio.md",
+    "knowledge/Projects.md",
+    "knowledge/PE Internship.md",
+    "knowledge/Neosapien IC Memo.md",
+    "knowledge/Mokobara APAC GTM.md",
+    "knowledge/Indian Gaming Landscape.md",
+    "knowledge/Resume.md",
+    "Untitled.md",
+    "knowledge/Founder Systems.md",
+    "knowledge/Hyderabad Startup Ecosystem Report 2025.md",
     "knowledge/secret_fact.md",
     "knowledge/New Text Document.txt",
     "bio.md",
