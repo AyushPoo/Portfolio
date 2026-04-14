@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "knowledge/GradeSense Technical Summary.md",
+                "file": "knowledge/GradeSense Story.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "GradeSense Technical Summary"
+              "title": "GradeSense Story"
             }
           }
         ]
@@ -186,16 +186,17 @@
   },
   "active": "f20f66a7baa81dce",
   "lastOpenFiles": [
-    "knowledge/Founder Systems.md",
-    "knowledge/GradeSense Technical Summary.md",
     "knowledge/bio.md",
+    "knowledge/GradeSense Story.md",
     "knowledge/Projects.md",
+    "GradeSense.md",
+    "knowledge/GradeSense Technical Summary.md",
+    "knowledge/Founder Systems.md",
     "knowledge/PE Internship.md",
     "knowledge/Neosapien IC Memo.md",
     "knowledge/Mokobara APAC GTM.md",
     "knowledge/Indian Gaming Landscape.md",
     "knowledge/Resume.md",
-    "Untitled.md",
     "knowledge/Hyderabad Startup Ecosystem Report 2025.md",
     "knowledge/secret_fact.md",
     "knowledge/New Text Document.txt",

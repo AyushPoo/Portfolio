@@ -4,7 +4,7 @@
 
 ---
 
-## 🚀 Professional Background
+## 🚀 Professional Background/[[Resume]]
 
 - **Current Role**: Founder at _GradeSense_ (AI-powered grading infrastructure) + MBA Candidate at Scaler School of Business
 - **Key Expertise**:
@@ -24,10 +24,9 @@
 ## 🧠 Skills & Tools
 
 - **Tech Stack**:
-    - Frontend: HTML, CSS, JavaScript → transitioning to React / Next.js / TypeScript / Tailwind
     - Backend/Infra: Google Cloud Platform, APIs, service accounts
     - AI Stack: Gemini API (Flash / Pro), prompt design, evaluation pipelines
-    - Tooling: Antigravity, Claude, AI-assisted dev workflows
+    - Tooling: Antigravity, Claude Code/Cowork, Openclaw AI-assisted dev workflows
 - **Soft Skills**:
     - Structured thinking
     - First-principles problem solving
@@ -70,7 +69,7 @@
 
 ## 🛠️ Work Examples / [[Projects]]
 
-- **GradeSense**:  
+- [[GradeSense Story]]  
     AI-powered grading infrastructure for schools, universities, and coaching institutes.  
     Focused on:
     - Automating subjective answer evaluation
@@ -82,9 +81,9 @@
     - Designed prompts and pipelines for structured grading
     - Tracks token usage and output patterns
     - Iterates to reduce unnecessary verbosity and cost
-- **Website / Product Infra**:
-    - Built and deployed marketing site (HTML → Next.js migration)
-    - Structured SaaS-style UI for institutional adoption
+- [[Founder Systems]]
+    - Built and deployed an AI production factory which makes templates and micro SaaS end to end from ideation to deployment to marketing through my mobile
+    - Structured SaaS-style UI
     - Focused on clean, professional, VC-ready presentation
 
 ---
