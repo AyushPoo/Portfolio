@@ -73,9 +73,12 @@ const TerminalChat = () => {
       setHistory(prev => [...prev, { role: 'assistant', content: text }]);
     } catch (error) {
       console.error('Terminal Error:', error);
+      const serverError = error.response?.data?.error;
       setHistory(prev => [...prev, { 
         role: 'error', 
-        content: 'SYSTEM OVERLOAD: RECALIBRATING BRAIN... Please try another query.' 
+        content: serverError
+          ? `AI ERROR: ${serverError}`
+          : 'SYSTEM OVERLOAD: RECALIBRATING BRAIN... Please try another query.'
       }]);
     } finally {
       setIsTyping(false);

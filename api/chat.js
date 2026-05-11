@@ -1,6 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import fs from "fs";
 import path from "path";
+import {
+  buildKnowledgeBase,
+  getModelsToTry,
+  sanitizeModelError,
+} from "./chat-helpers.mjs";
 
 export default async function handler(req, res) {
   // 1. Initial Checks
@@ -18,34 +22,10 @@ export default async function handler(req, res) {
 
   try {
     const { messages } = req.body;
+    const lastMessage = messages[messages.length - 1].content;
     const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // Resolve Knowledge Base
-    const bioPath = path.join(process.cwd(), "api", "bio.md");
-    const knowledgeDirPath = path.join(process.cwd(), "api", "knowledge");
-    
-    let bioContent = "";
-    
-    // Read primary bio
-    if (fs.existsSync(bioPath)) {
-      bioContent += fs.readFileSync(bioPath, "utf8") + "\n\n";
-    }
-
-    // Read additional knowledge files
-    if (fs.existsSync(knowledgeDirPath)) {
-      const files = fs.readdirSync(knowledgeDirPath);
-      for (const file of files) {
-        if (file.endsWith(".md")) {
-          const filePath = path.join(knowledgeDirPath, file);
-          const content = fs.readFileSync(filePath, "utf8");
-          bioContent += `--- FILE: ${file} ---\n${content}\n\n`;
-        }
-      }
-    }
-
-    if (!bioContent.trim()) {
-      bioContent = "Ayush is a versatile professional.";
-    }
+    const apiDir = path.join(process.cwd(), "api");
+    const bioContent = buildKnowledgeBase({ apiDir, query: lastMessage });
 
     const systemInstruction = `You are the Digital Twin of Ayush Poojary.
     KB: ${bioContent}
@@ -70,12 +50,11 @@ export default async function handler(req, res) {
       chatHistory.shift();
     }
 
-    const lastMessage = messages[messages.length - 1].content;
     const prompt = lastMessage;
 
-    // Hardcoded verified model for full-proof connectivity
-    const modelsToTry = ["gemma-4-31b-it", "gemini-2.5-pro"]; 
+    const modelsToTry = getModelsToTry();
     let lastError = null;
+    const modelErrors = [];
 
     for (const modelName of modelsToTry) {
       try {
@@ -107,16 +86,21 @@ export default async function handler(req, res) {
         return res.status(200).json({ text: cleanText.trim(), used: modelName });
       } catch (err) {
         lastError = err;
-        console.warn(`Guillotine bypassed or model ${modelName} fail:`, err.message);
+        const safeError = sanitizeModelError(err);
+        modelErrors.push({ model: modelName, error: safeError });
+        console.warn(`Model ${modelName} failed:`, safeError);
         continue;
       }
     }
 
-    throw lastError;
+    throw Object.assign(lastError || new Error("No Gemini model was available."), {
+      modelErrors,
+    });
   } catch (error) {
     return res.status(500).json({ 
-      error: error.message,
-      hint: "All specialized models failed. Please verify your API key and region in Vercel."
+      error: sanitizeModelError(error),
+      models: error.modelErrors || [],
+      hint: "Gemini request failed. Check model availability, quota, and GEMINI_MODELS/GEMINI_MODEL in Vercel."
     });
   }
 }
