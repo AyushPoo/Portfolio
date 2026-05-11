@@ -3,6 +3,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, X, Minimize2, Send, Command } from 'lucide-react';
 import axios from 'axios';
 
+const formatTerminalError = (error) => {
+  const responseData = error.response?.data;
+
+  if (typeof responseData === 'string' && responseData.trim()) {
+    return `AI ERROR: ${responseData.trim()}`;
+  }
+
+  if (typeof responseData?.error === 'string' && responseData.error.trim()) {
+    return `AI ERROR: ${responseData.error.trim()}`;
+  }
+
+  if (typeof error.message === 'string' && error.message.trim()) {
+    return `AI ERROR: ${error.message.trim()}`;
+  }
+
+  return 'SYSTEM OVERLOAD: RECALIBRATING BRAIN... Please try another query.';
+};
+
 const TerminalChat = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -73,12 +91,9 @@ const TerminalChat = () => {
       setHistory(prev => [...prev, { role: 'assistant', content: text }]);
     } catch (error) {
       console.error('Terminal Error:', error);
-      const serverError = error.response?.data?.error;
       setHistory(prev => [...prev, { 
         role: 'error', 
-        content: serverError
-          ? `AI ERROR: ${serverError}`
-          : 'SYSTEM OVERLOAD: RECALIBRATING BRAIN... Please try another query.'
+        content: formatTerminalError(error)
       }]);
     } finally {
       setIsTyping(false);

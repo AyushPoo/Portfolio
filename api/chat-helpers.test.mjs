@@ -8,7 +8,7 @@ import {
   buildKnowledgeBase,
   getModelsToTry,
   sanitizeModelError,
-} from "./chat-helpers.mjs";
+} from "./chat-helpers.js";
 
 test("getModelsToTry prefers hosted Gemma and skips Pro fallback", () => {
   assert.deepEqual(getModelsToTry({}), [

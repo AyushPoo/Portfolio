@@ -4,7 +4,7 @@ import {
   buildKnowledgeBase,
   getModelsToTry,
   sanitizeModelError,
-} from "./chat-helpers.mjs";
+} from "./chat-helpers.js";
 
 export default async function handler(req, res) {
   // 1. Initial Checks
